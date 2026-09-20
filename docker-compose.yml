@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   kong-database:
     image: postgres:11-alpine
@@ -36,8 +34,58 @@ services:
     command: kong migrations bootstrap
     restart: on-failure
 
+  kong-users-seed:
+    image: postgres:11-alpine
+    container_name: kong-users-seed
+    networks:
+      - kong-net
+    env_file:
+      - .env
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migration:
+        condition: service_completed_successfully
+    volumes:
+      - ./kong/bootstrap/users.sql:/docker-entrypoint-initdb.d/users.sql:ro
+    command: >
+      sh -c '
+      export PGPASSWORD="$POSTGRES_PASSWORD" &&
+      until pg_isready -h kong-database -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do sleep 2; done &&
+      psql -h kong-database -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /docker-entrypoint-initdb.d/users.sql
+      '
+    restart: on-failure
+
+  kong-config:
+    build:
+      context: ./kong
+      dockerfile: Dockerfile
+    image: auth-service-kong:3.4
+    container_name: kong-config
+    networks:
+      - kong-net
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: ${POSTGRES_USER}
+      KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
+      KONG_PG_DATABASE: ${POSTGRES_DB}
+      KONG_PLUGINS: bundled,auth-rbac
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migration:
+        condition: service_completed_successfully
+      kong-users-seed:
+        condition: service_completed_successfully
+    command: kong config db_import /etc/kong/kong.yml
+    restart: on-failure
+
   kong:
-    image: kong:3.4
+    build:
+      context: ./kong
+      dockerfile: Dockerfile
+    image: auth-service-kong:3.4
     container_name: kong
     restart: always
     networks:
@@ -48,54 +96,21 @@ services:
       KONG_PG_USER: ${POSTGRES_USER}
       KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
       KONG_PG_DATABASE: ${POSTGRES_DB}
+      KONG_PLUGINS: bundled,auth-rbac
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
       - "8443:8443"
       - "8001:8001"
       - "8444:8444"
     depends_on:
-      kong-migration:
-        condition: service_completed_successfully
-
-  konga-prepare:
-    image: pantsel/konga:latest
-    container_name: konga-prepare
-    networks:
-      - kong-net
-    command: "-c prepare -a postgres -u postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@kong-database:5432/${POSTGRES_DB}"
-    environment:
-      NODE_ENV: production
-    depends_on:
-      kong-database:
-        condition: service_healthy
-    restart: on-failure
-
-  konga:
-    image: pantsel/konga:latest
-    container_name: konga
-    restart: always
-    networks:
-      - kong-net
-    environment:
-      NODE_ENV: production
-      DB_ADAPTER: postgres
-      DB_HOST: kong-database
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_DATABASE: ${POSTGRES_DB}
-      KONGA_HOOK_TIMEOUT: 120000
-    ports:
-      - "1337:1337"
-    volumes:
-      - konga_data:/app/kon-user-data
-    depends_on:
-      konga-prepare:
+      kong-config:
         condition: service_completed_successfully
 
 networks:
@@ -104,6 +119,4 @@ networks:
 
 volumes:
   kong_data:
-    driver: local
-  konga_data:
     driver: local

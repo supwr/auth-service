@@ -1,0 +1,27 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: auth-service-java
+    url: http://host.docker.internal:8080
+    routes:
+      - name: rota-login
+        methods:
+          - POST
+        paths:
+          - /api/v1/auth/login
+        strip_path: false
+        plugins:
+          - name: auth-rbac
+
+  - name: api-service-java
+    url: http://host.docker.internal:8080
+    routes:
+      - name: rota-appointments
+        methods:
+          - GET
+        paths:
+          - /api/v1/appointments
+        strip_path: false
+    plugins:
+      - name: auth-rbac
