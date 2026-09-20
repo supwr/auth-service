@@ -64,7 +64,7 @@ end
 local function database_config()
   return {
     host = os.getenv("KONG_PG_HOST") or "kong-database",
-    port = tonumber(os.getenv("KONG_PG_PORT") or "5432"),
+    port = 5432,
     user = os.getenv("KONG_PG_USER") or "kong",
     password = os.getenv("KONG_PG_PASSWORD") or "kong-pwd",
     database = os.getenv("KONG_PG_DATABASE") or "kong",
