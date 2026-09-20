@@ -179,9 +179,15 @@ local function authenticate_request()
   kong.service.request.set_header("X-User-Roles", tostring(roles))
 end
 
+local function is_protected_path(path)
+  return path:find("^/api/v1/appointments/")
+    or path == "/graphql"
+    or path:find("^/graphql/")
+end
+
 function _M:access()
   if kong.request.get_method() ~= "POST" then
-    if kong.request.get_path():find("^/api/v1/appointments/") then
+    if is_protected_path(kong.request.get_path()) then
       return authenticate_request()
     end
 
@@ -189,7 +195,7 @@ function _M:access()
   end
 
   if kong.request.get_path() ~= "/api/v1/auth/login" then
-    if kong.request.get_path():find("^/api/v1/appointments/") then
+    if is_protected_path(kong.request.get_path()) then
       return authenticate_request()
     end
 

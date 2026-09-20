@@ -3,7 +3,7 @@ _transform: true
 
 services:
   - name: api-service-java
-    url: http://localhost:8080
+    url: http://host.docker.internal:8080
     routes:
       - name: rota-appointments
         methods:
@@ -13,6 +13,19 @@ services:
           - DELETE
         paths:
           - /api/v1/appointments
+        strip_path: false
+    plugins:
+      - name: auth-rbac
+  - name: graphql-service-java
+    url: http://host.docker.internal:8084
+    routes:
+      - name: rota-graphql
+        methods:
+          - GET
+          - POST
+          - OPTIONS
+        paths:
+          - /graphql
         strip_path: false
     plugins:
       - name: auth-rbac
