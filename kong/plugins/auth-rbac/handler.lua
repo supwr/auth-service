@@ -175,12 +175,13 @@ local function authenticate_request()
     roles = table.concat(roles, ",")
   end
 
+  kong.log.warn("auth-rbac: setting headers, user_id=", user_id, " roles=", roles)
   kong.service.request.set_header("X-User-ID", tostring(user_id))
   kong.service.request.set_header("X-User-Roles", tostring(roles))
 end
 
 local function is_protected_path(path)
-  return path:find("^/api/v1/appointments/")
+  return path:find("^/api/v1/appointments") -- accepts with or without trailing slash
     or path == "/graphql"
     or path:find("^/graphql/")
 end

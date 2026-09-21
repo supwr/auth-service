@@ -1,0 +1,251 @@
+{
+	"info": {
+		"_postman_id": "15431699-3d2c-4105-8753-d683b9b49bd6",
+		"name": "Auth Service - Kong Flow",
+		"description": "Collection para testar o login e os endpoints protegidos expostos pelo Kong.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4242434"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const json = pm.response.json();",
+							"pm.collectionVariables.set('access_token', json.access_token);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"doctor@example.com\",\n    \"password\": \"123456\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"auth",
+						"login"
+					]
+				},
+				"description": "Autentica o usuário e salva o access_token retornado pela resposta."
+			},
+			"response": []
+		},
+		{
+			"name": "Appointments - POST",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"patientId\": \"e9d4c337-bd73-49a3-bd09-6877033f6505\",\n  \"doctorId\": \"fc686449-7e22-4528-912c-2d7525b452d8\",\n  \"appointmentDateTime\": \"2026-09-21T14:30:00-03:00\",\n  \"fullname\": \"John Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/appointments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"appointments"
+					]
+				},
+				"description": "Cria um appointment atrás do Kong usando o bearer token recebido no login."
+			},
+			"response": []
+		},
+		{
+			"name": "Appointments - GET by ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/appointments/83ddd78a-cbdc-4a66-a36b-829cbcba7c84",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"appointments",
+						"83ddd78a-cbdc-4a66-a36b-829cbcba7c84"
+					]
+				},
+				"description": "Consulta um appointment pelo ID atrás do Kong usando o bearer token recebido no login."
+			},
+			"response": []
+		},
+		{
+			"name": "Appointments - PUT",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"patientId\": \"e9d4c337-bd73-49a3-bd09-6877033f6505\",\n  \"doctorId\": \"fc686449-7e22-4528-912c-2d7525b452d8\",\n  \"appointmentDateTime\": \"2026-09-22T10:00:00-03:00\",\n  \"fullname\": \"John Doe\",\n  \"email\": \"john.doe@example.com\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/v1/appointments/83ddd78a-cbdc-4a66-a36b-829cbcba7c84",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"appointments",
+						"83ddd78a-cbdc-4a66-a36b-829cbcba7c84"
+					]
+				},
+				"description": "Atualiza um appointment pelo ID atrás do Kong usando o bearer token recebido no login."
+			},
+			"response": []
+		},
+		{
+			"name": "Appointments - DELETE",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/appointments/83ddd78a-cbdc-4a66-a36b-829cbcba7c84",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"appointments",
+						"83ddd78a-cbdc-4a66-a36b-829cbcba7c84"
+					]
+				},
+				"description": "Remove um appointment pelo ID atrás do Kong usando o bearer token recebido no login."
+			},
+			"response": []
+		},
+		{
+			"name": "GraphQL - POST",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": \"query { __typename }\"\n}"
+				},
+				"url": {
+					"raw": ""
+				},
+				"description": "Executa uma requisição GraphQL protegida pelo Kong."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "access_token",
+			"value": ""
+		}
+	]
+}
