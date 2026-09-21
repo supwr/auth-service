@@ -75,7 +75,7 @@ O plugin customizado `kong/plugins/auth-rbac/handler.lua` é responsável por:
 
 A collection Postman com login e requests protegidos está em:
 
-- `docs/auth-service.postman_collection.json`
+- [docs/auth-service.postman_collection.json](docs/auth-service.postman_collection.json)
 
 ### Exemplo do request
 
